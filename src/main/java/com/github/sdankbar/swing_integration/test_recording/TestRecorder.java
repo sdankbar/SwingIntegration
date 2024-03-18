@@ -151,6 +151,19 @@ public class TestRecorder {
 		return i;
 	}
 
+	private String buttonToEnum(final int mouseButton) {
+		switch (mouseButton) {
+		case MouseEvent.BUTTON1:
+			return "InputEvent.BUTTON1_DOWN_MASK";
+		case MouseEvent.BUTTON2:
+			return "InputEvent.BUTTON2_DOWN_MASK";
+		case MouseEvent.BUTTON3:
+			return "InputEvent.BUTTON3_DOWN_MASK";
+		default:
+			return "InputEvent.BUTTON1_DOWN_MASK";
+		}
+	}
+
 	private void saveTestSteps() {
 		final File output = new File(recordingDir, "TemplateTest.java");
 		try (BufferedWriter w = new BufferedWriter(new FileWriter(output))) {
@@ -160,6 +173,7 @@ public class TestRecorder {
 			w.write("import org.junit.After;\n");
 			w.write("import org.junit.Test;\n");
 			w.write("import java.awt.Robot;\n");
+			w.write("import java.awt.AWTException;\n");
 			w.write("\n");
 			w.write("public class IntegrationTest {\n");
 			w.write("\n");
@@ -176,7 +190,7 @@ public class TestRecorder {
 			w.write("\t}\n");
 			w.write("\n");
 			w.write("\t@Test\n");
-			w.write("\tpublic void test_run() {\n");
+			w.write("\tpublic void test_run() throws AWTException {\n");
 			w.write("\t\tRobot r = new Robot();\n");
 
 			Instant workingTime = startTime;
@@ -191,6 +205,7 @@ public class TestRecorder {
 						}
 					} else if (e.event instanceof MouseWheelEvent) {
 						final MouseEvent mouse = (MouseWheelEvent) e.event;
+						w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
 						w.write("\t\tr.mouseWheel(" + mouse.getClickCount() + ");\n");
 					} else if (e.event instanceof MouseEvent) {
 						final MouseEvent mouse = (MouseEvent) e.event;
@@ -198,12 +213,10 @@ public class TestRecorder {
 							w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
 						} else if (mouse.getID() == MouseEvent.MOUSE_PRESSED) {
 							w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
-							w.write("\t\tr.mousePress(" + mouse.getButton() + ");\n");
+							w.write("\t\tr.mousePress(" + buttonToEnum(mouse.getButton()) + ");\n");
 						} else if (mouse.getID() == MouseEvent.MOUSE_RELEASED) {
 							w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
-							w.write("\t\tr.mouseRelease(" + mouse.getButton() + ");\n");
-						} else if (mouse.getID() == MouseEvent.MOUSE_WHEEL) {
-							w.write("\t\tr.mouseWheel(" + mouse.getButton() + ");\n");
+							w.write("\t\tr.mouseRelease(" + buttonToEnum(mouse.getButton()) + ");\n");
 						}
 					}
 
