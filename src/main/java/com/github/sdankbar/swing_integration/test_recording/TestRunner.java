@@ -88,4 +88,40 @@ public class TestRunner {
 		return (peakSignalToNoiseRatio > ratiodB);
 	}
 
+	public void keyPress(final int keyCode) {
+		robot.keyPress(keyCode);
+	}
+
+	public void keyRelease(final int keyCode) {
+		robot.keyRelease(keyCode);
+	}
+
+	public void mouseWheel(final int x, final int y, final int wheelClickCount) {
+		robot.mouseMove(x, y);
+		robot.mouseWheel(wheelClickCount);
+	}
+
+	public void mouseMove(final int x, final int y) {
+		robot.mouseMove(x, y);
+	}
+
+	public void mousePress(final int x, final int y, final int buttons) {
+		robot.mouseMove(x, y);
+		robot.mousePress(buttons);
+	}
+
+	public void mouseRelease(final int x, final int y, final int buttons) {
+		robot.mouseMove(x, y);
+		robot.mouseRelease(buttons);
+	}
+
+	public void delay(final int milli) {
+		try {
+			Thread.sleep(milli);
+		} catch (final InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 }

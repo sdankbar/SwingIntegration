@@ -103,9 +103,9 @@ public class TestRecorder {
 		final KeyEvent key = (KeyEvent) event;
 
 		if (key.getID() == KeyEvent.KEY_PRESSED) {
-			if (key.getKeyCode() == KeyEvent.VK_F11) {
+			if (key.getKeyCode() == KeyEvent.VK_F1) {
 				// Ignore
-			} else if (key.getKeyCode() == KeyEvent.VK_F10) {
+			} else if (key.getKeyCode() == KeyEvent.VK_F2) {
 				// Ignore
 			} else if (isRecording) {
 				final RecordedEvent rec = new RecordedEvent(event, Instant.now());
@@ -113,7 +113,7 @@ public class TestRecorder {
 			}
 			lastMouseMoveTime = Instant.EPOCH;
 		} else if (key.getID() == KeyEvent.KEY_RELEASED) {
-			if (key.getKeyCode() == KeyEvent.VK_F11) {
+			if (key.getKeyCode() == KeyEvent.VK_F1) {
 				if (isRecording) {
 					saveTestSteps();
 				} else {
@@ -127,7 +127,7 @@ public class TestRecorder {
 				isRecording = !isRecording;
 
 				lastMouseMoveTime = Instant.EPOCH;
-			} else if (key.getKeyCode() == KeyEvent.VK_F10 && isRecording) {
+			} else if (key.getKeyCode() == KeyEvent.VK_F2 && isRecording) {
 
 				final BufferedImage windowImage = takeScreenshot();
 				if (windowImage != null) {
@@ -191,7 +191,7 @@ public class TestRecorder {
 			w.write("\n");
 			w.write("\t@Test\n");
 			w.write("\tpublic void test_run() throws AWTException {\n");
-			w.write("\t\tTestRunnder tools = new TestRunner();\n");
+			w.write("\t\tTestRunner tools = new TestRunner(new File(screenshotDir));\n");
 
 			Instant workingTime = startTime;
 			for (final RecordedEvent e : recordedEvents) {
@@ -199,36 +199,34 @@ public class TestRecorder {
 					if (e.event instanceof KeyEvent) {
 						final KeyEvent key = (KeyEvent) e.event;
 						if (key.getID() == KeyEvent.KEY_PRESSED) {
-							w.write("\t\tr.keyPress(" + key.getKeyCode() + ");\n");
+							w.write("\t\ttools.keyPress(" + key.getKeyCode() + ");\n");
 						} else {
-							w.write("\t\tr.keyRelease(" + key.getKeyCode() + ");\n");
+							w.write("\t\ttools.keyRelease(" + key.getKeyCode() + ");\n");
 						}
 					} else if (e.event instanceof MouseWheelEvent) {
 						final MouseEvent mouse = (MouseWheelEvent) e.event;
-						w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
-						w.write("\t\tr.mouseWheel(" + mouse.getClickCount() + ");\n");
+						w.write("\t\ttools.mouseWheel(" + mouse.getX() + ", " + mouse.getY() + ","
+								+ mouse.getClickCount() + ");\n");
 					} else if (e.event instanceof MouseEvent) {
 						final MouseEvent mouse = (MouseEvent) e.event;
 						if (e.motionEvent) {
-							w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
+							w.write("\t\ttools.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
 						} else if (mouse.getID() == MouseEvent.MOUSE_PRESSED) {
-							w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
-							w.write("\t\tr.mousePress(" + buttonToEnum(mouse.getButton()) + ");\n");
+							w.write("\t\ttools.mousePress(" + mouse.getX() + ", " + mouse.getY() + ","
+									+ buttonToEnum(mouse.getButton()) + ");\n");
 						} else if (mouse.getID() == MouseEvent.MOUSE_RELEASED) {
-							w.write("\t\tr.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
-							w.write("\t\tr.mouseRelease(" + buttonToEnum(mouse.getButton()) + ");\n");
+							w.write("\t\ttools.mouseRelease(" + mouse.getX() + ", " + mouse.getY() + ","
+									+ buttonToEnum(mouse.getButton()) + ");\n");
 						}
 					}
 
 					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
-					w.write("\t\tr.delay(" + milli + ");\n");
+					w.write("\t\ttools.delay(" + milli + ");\n");
 
 					workingTime = e.eventTime;
 				} else {
 					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
-					// TODO
-					w.write("\t\ttools.compareWindowToImage(new File(screenshotDir, path + \""
-							+ e.screenshotFile.getName() + "\"), Duration.ofMillis(" + milli + "));\n");
+					w.write("\t\ttools.compare(\"" + e.screenshotFile.getName() + "\");\n");
 					workingTime = e.eventTime;
 				}
 			}

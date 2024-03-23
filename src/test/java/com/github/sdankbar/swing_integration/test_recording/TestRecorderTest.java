@@ -6,8 +6,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.InputEvent;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -19,6 +19,9 @@ import javax.swing.border.Border;
 import org.junit.Test;
 
 public class TestRecorderTest {
+
+	private static final String screenshotDir = "src/test/resources/TestRecorderTest";
+
 	private static JFrame createAndShowGUI() {
 		final JFrame jFrame = new JFrame("Hello World Swing Example");
 		jFrame.setLayout(new FlowLayout());
@@ -46,25 +49,6 @@ public class TestRecorderTest {
 		field.setPreferredSize(new Dimension(200, 100));
 		button.setHorizontalAlignment(JLabel.CENTER);
 		button.setVerticalAlignment(JLabel.CENTER);
-		field.addKeyListener(new KeyListener() {
-
-			@Override
-			public void keyTyped(final KeyEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void keyReleased(final KeyEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void keyPressed(final KeyEvent e) {
-				System.out.println("A");
-			}
-		});
 		jFrame.add(field);
 
 		jFrame.setVisible(true);
@@ -77,13 +61,45 @@ public class TestRecorderTest {
 		final TestRecorder t = new TestRecorder();
 		final JFrame f = createAndShowGUI();
 
-		while (true) {
-			try {
-				Thread.sleep(1000);
-			} catch (final InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		try {
+			Thread.sleep(2000);
+		} catch (final InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
+		final TestRunner tools = new TestRunner(new File(screenshotDir));
+		tools.compare("screenshot_1711204025.png");
+		tools.mouseMove(274, 261);
+		tools.delay(214);
+		tools.delay(107);
+		tools.mousePress(81, 81, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(409);
+		tools.mouseRelease(81, 81, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(92);
+		tools.delay(1);
+		tools.compare("screenshot_1711204028.png");
+		tools.mouseMove(87, 79);
+		tools.delay(221);
+		tools.delay(40);
+		tools.delay(0);
+		tools.mousePress(142, 63, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(290);
+		tools.mouseRelease(142, 63, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(106);
+		tools.delay(0);
+		tools.keyPress(65);
+		tools.delay(562);
+		tools.keyRelease(65);
+		tools.delay(78);
+		tools.keyPress(66);
+		tools.delay(191);
+		tools.keyRelease(66);
+		tools.delay(81);
+		tools.keyPress(67);
+		tools.delay(239);
+		tools.keyRelease(67);
+		tools.delay(64);
+		tools.compare("screenshot_1711204030.png");
 	}
 }
