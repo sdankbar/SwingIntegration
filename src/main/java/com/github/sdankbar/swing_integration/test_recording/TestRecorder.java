@@ -192,6 +192,7 @@ public class TestRecorder {
 			w.write("\t@Test\n");
 			w.write("\tpublic void test_run() throws AWTException {\n");
 			w.write("\t\tTestRunner tools = new TestRunner(new File(screenshotDir));\n");
+			w.write("\t\ttools.waitForWindow();\n");
 
 			Instant workingTime = startTime;
 			for (final RecordedEvent e : recordedEvents) {
@@ -205,17 +206,18 @@ public class TestRecorder {
 						}
 					} else if (e.event instanceof MouseWheelEvent) {
 						final MouseEvent mouse = (MouseWheelEvent) e.event;
-						w.write("\t\ttools.mouseWheel(" + mouse.getX() + ", " + mouse.getY() + ","
+						w.write("\t\ttools.mouseWheel(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
 								+ mouse.getClickCount() + ");\n");
 					} else if (e.event instanceof MouseEvent) {
 						final MouseEvent mouse = (MouseEvent) e.event;
 						if (e.motionEvent) {
-							w.write("\t\ttools.mouseMove(" + mouse.getX() + ", " + mouse.getY() + ");\n");
+							w.write("\t\ttools.mouseMove(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
+									+ ");\n");
 						} else if (mouse.getID() == MouseEvent.MOUSE_PRESSED) {
-							w.write("\t\ttools.mousePress(" + mouse.getX() + ", " + mouse.getY() + ","
+							w.write("\t\ttools.mousePress(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
 									+ buttonToEnum(mouse.getButton()) + ");\n");
 						} else if (mouse.getID() == MouseEvent.MOUSE_RELEASED) {
-							w.write("\t\ttools.mouseRelease(" + mouse.getX() + ", " + mouse.getY() + ","
+							w.write("\t\ttools.mouseRelease(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
 									+ buttonToEnum(mouse.getButton()) + ");\n");
 						}
 					}
@@ -226,6 +228,7 @@ public class TestRecorder {
 					workingTime = e.eventTime;
 				} else {
 					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
+					w.write("\t\ttools.delay(" + milli + ");\n");
 					w.write("\t\ttools.compare(\"" + e.screenshotFile.getName() + "\");\n");
 					workingTime = e.eventTime;
 				}

@@ -24,6 +24,7 @@ public class TestRecorderTest {
 
 	private static JFrame createAndShowGUI() {
 		final JFrame jFrame = new JFrame("Hello World Swing Example");
+		jFrame.setName("MainWindow");
 		jFrame.setLayout(new FlowLayout());
 		jFrame.setSize(500, 360);
 		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,45 +62,42 @@ public class TestRecorderTest {
 		final TestRecorder t = new TestRecorder();
 		final JFrame f = createAndShowGUI();
 
-		try {
-			Thread.sleep(2000);
-		} catch (final InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 		final TestRunner tools = new TestRunner(new File(screenshotDir));
-		tools.compare("screenshot_1711204025.png");
-		tools.mouseMove(274, 261);
-		tools.delay(214);
-		tools.delay(107);
-		tools.mousePress(81, 81, InputEvent.BUTTON1_DOWN_MASK);
-		tools.delay(409);
-		tools.mouseRelease(81, 81, InputEvent.BUTTON1_DOWN_MASK);
+		tools.waitForWindow();
+		tools.delay(561);
+		tools.compare("screenshot_1711205090.png");
+		tools.mouseMove(186, 249);
+		tools.delay(57);
+		tools.delay(47);
+		tools.mousePress(129, 46, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(385);
+		tools.mouseRelease(129, 46, InputEvent.BUTTON1_DOWN_MASK);
 		tools.delay(92);
-		tools.delay(1);
-		tools.compare("screenshot_1711204028.png");
-		tools.mouseMove(87, 79);
-		tools.delay(221);
-		tools.delay(40);
 		tools.delay(0);
-		tools.mousePress(142, 63, InputEvent.BUTTON1_DOWN_MASK);
-		tools.delay(290);
-		tools.mouseRelease(142, 63, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(482);
+		tools.compare("screenshot_1711205091.png");
+		tools.mouseMove(130, 46);
+		tools.delay(226);
+		tools.delay(74);
+		tools.delay(8);
+		tools.mousePress(258, 73, InputEvent.BUTTON1_DOWN_MASK);
+		tools.delay(259);
+		tools.mouseRelease(258, 73, InputEvent.BUTTON1_DOWN_MASK);
 		tools.delay(106);
 		tools.delay(0);
 		tools.keyPress(65);
-		tools.delay(562);
+		tools.delay(494);
 		tools.keyRelease(65);
-		tools.delay(78);
+		tools.delay(96);
 		tools.keyPress(66);
-		tools.delay(191);
+		tools.delay(143);
 		tools.keyRelease(66);
-		tools.delay(81);
+		tools.delay(75);
 		tools.keyPress(67);
-		tools.delay(239);
+		tools.delay(135);
 		tools.keyRelease(67);
-		tools.delay(64);
-		tools.compare("screenshot_1711204030.png");
+		tools.delay(84);
+		tools.delay(550);
+		tools.compare("screenshot_1711205093.png");
 	}
 }

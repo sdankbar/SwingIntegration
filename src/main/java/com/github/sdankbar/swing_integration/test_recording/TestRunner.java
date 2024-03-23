@@ -2,12 +2,14 @@ package com.github.sdankbar.swing_integration.test_recording;
 
 import java.awt.AWTException;
 import java.awt.Robot;
+import java.awt.Window;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
+import javax.swing.FocusManager;
 
 import org.junit.Assert;
 
@@ -22,6 +24,17 @@ public class TestRunner {
 			robot = new Robot();
 		} catch (final AWTException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public void waitForWindow() {
+		Window w;
+		while ((w = FocusManager.getCurrentManager().getActiveWindow()) == null) {
+			try {
+				Thread.sleep(100);
+			} catch (final InterruptedException e) {
+
+			}
 		}
 	}
 
