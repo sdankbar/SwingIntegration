@@ -196,10 +196,15 @@ public class TestRecorder {
 			w.write("import org.junit.Test;\n");
 			w.write("import java.awt.Robot;\n");
 			w.write("import java.awt.AWTException;\n");
+			w.write("import org.junit.rules.ErrorCollector;\n");
+			w.write("import org.junit.Rule;\n");
 			w.write("\n");
 			w.write("public class IntegrationTest {\n");
 			w.write("\n");
 			w.write("\tprivate final String screenshotDir = \"TODO\";\n");
+			w.write("\n");
+			w.write("\t@Rule\n");
+			w.write("\tpublic ErrorCollector collector= new ErrorCollector();\n");
 			w.write("\n");
 			w.write("\t@Before\n");
 			w.write("\tpublic void setup() {\n");
@@ -213,7 +218,7 @@ public class TestRecorder {
 			w.write("\n");
 			w.write("\t@Test\n");
 			w.write("\tpublic void test_run() throws AWTException {\n");
-			w.write("\t\tTestRunner tools = new TestRunner(new File(screenshotDir));\n");
+			w.write("\t\tTestRunner tools = new TestRunner(new File(screenshotDir), collector);\n");
 			w.write("\t\ttools.waitForWindow();\n");
 
 			Instant workingTime = startTime;

@@ -38,11 +38,16 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ErrorCollector;
 
 public class TestRecorderTest {
 
 	private static final String screenshotDir = "src/test/resources/TestRecorderTest";
+
+	@Rule
+	public ErrorCollector collector = new ErrorCollector();
 
 	private static JFrame createAndShowGUI() {
 		final JFrame jFrame = new JFrame("Hello World Swing Example");
@@ -84,7 +89,7 @@ public class TestRecorderTest {
 		final TestRecorder t = new TestRecorder();
 		final JFrame f = createAndShowGUI();
 
-		final TestRunner tools = new TestRunner(new File(screenshotDir));
+		final TestRunner tools = new TestRunner(new File(screenshotDir), collector);
 		tools.waitForWindow();
 		tools.delay(561);
 		tools.compare("screenshot_1711205090.png");

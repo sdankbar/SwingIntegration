@@ -23,6 +23,7 @@
 package com.github.sdankbar.swing_integration.test_recording;
 
 import java.awt.AWTException;
+import java.awt.Color;
 import java.awt.Robot;
 import java.awt.Window;
 import java.awt.image.BufferedImage;
@@ -33,15 +34,17 @@ import java.util.Objects;
 import javax.imageio.ImageIO;
 import javax.swing.FocusManager;
 
-import org.junit.Assert;
+import org.junit.rules.ErrorCollector;
 
 public class TestRunner {
 
 	private final File imagePath;
 	private final Robot robot;
+	private final ErrorCollector collector;
 
-	public TestRunner(final File imagePath) {
+	public TestRunner(final File imagePath, final ErrorCollector collector) {
 		this.imagePath = Objects.requireNonNull(imagePath, "imagePath is null");
+		this.collector = Objects.requireNonNull(collector, "collector is null");
 		try {
 			robot = new Robot();
 		} catch (final AWTException e) {
@@ -60,17 +63,100 @@ public class TestRunner {
 		}
 	}
 
-	public void compare(final String fileName) {
-		try {
-			final BufferedImage target = ImageIO.read(new File(imagePath, fileName));
-			final BufferedImage source = TestRecorder.takeScreenshot();
+	private BufferedImage generateDelta(final BufferedImage source, final BufferedImage target) {
+		if (source.getWidth() != target.getWidth()) {
+			return null;
+		} else if (source.getHeight() != target.getHeight()) {
+			return null;
+		} else {
+			final boolean whiteEquals = ("1".equals(System.getenv("WHITE_EQUALS")));
+			final BufferedImage output = new BufferedImage(source.getWidth(), source.getHeight(),
+					BufferedImage.TYPE_INT_ARGB);
 
-			if (!fuzzyEquals(source, target, 75)) {
-				Assert.fail("Images not equal");
-				// TODO generate delta and other options
+			for (int x = 0; x < source.getWidth(); ++x) {
+				for (int y = 0; y < source.getHeight(); ++y) {
+					final int sColor = source.getRGB(x, y);
+					final int tColor = target.getRGB(x, y);
+					final int deltaR = Math.abs(red(sColor) - red(tColor));
+					final int deltaG = Math.abs(green(sColor) - green(tColor));
+					final int deltaB = Math.abs(blue(sColor) - blue(tColor));
+					if (whiteEquals && deltaR == 0 && deltaG == 0 && deltaB == 0) {
+						output.setRGB(x, y, new Color(255, 255, 255).getRGB());
+					} else {
+						output.setRGB(x, y, new Color(deltaR, deltaG, deltaB).getRGB());
+					}
+				}
 			}
+
+			return output;
+		}
+	}
+
+	public void compare(final String fileName) {
+		compare(fileName, 75);
+	}
+
+	public void compare(final String fileName, final int minimumScore) {
+		try {
+			final File fullPath = new File(imagePath, fileName);
+			final BufferedImage target = ImageIO.read(fullPath);
+
+			BufferedImage source = null;
+			for (int i = 0; i < 10; ++i) {
+				source = TestRecorder.takeScreenshot();
+
+				if (fuzzyEquals(source, target, 75)) {
+					return;
+				}
+				Thread.sleep(100);
+			}
+
+			if ("1".equals(System.getenv("RECAPTURE_CONDITIONALLY"))
+					&& !"".equals(System.getenv("RECAPTURE_LOWER_BOUND"))) {
+				final double ratio = getPeakSignalToNoiseRatio(source, target);
+				final double lowerBound = Double.parseDouble(System.getenv("RECAPTURE_LOWER_BOUND"));
+				if (ratio >= lowerBound) {
+					final BufferedImage delta = generateDelta(source, target);
+					if (delta != null) {
+						final String diffFile = fileName.replace(".png", ".delta.png");
+						ImageIO.write(delta, "PNG", new File(imagePath, diffFile));
+					}
+					ImageIO.write(source, "PNG", new File(imagePath, fileName));
+				} else {
+					final BufferedImage delta = generateDelta(source, target);
+					if (delta != null) {
+						final String diffFile = fileName.replace(".png", ".delta.png");
+						ImageIO.write(delta, "PNG", new File(imagePath, diffFile));
+						collector.addError(new RuntimeException("Image does not match " + fileName
+								+ " and not eligible for recapture. See " + diffFile));
+					} else {
+						collector.addError(new RuntimeException(
+								"Image does not match " + fileName + " and not eligible for recapture."));
+					}
+				}
+			} else if ("1".equals(System.getenv("RECAPTURE"))) {
+				final BufferedImage delta = generateDelta(source, target);
+				if (delta != null) {
+					final String diffFile = fileName.replace(".png", ".delta.png");
+					ImageIO.write(delta, "PNG", new File(imagePath, diffFile));
+				}
+				ImageIO.write(source, "PNG", new File(imagePath, fileName));
+			} else {
+				final BufferedImage delta = generateDelta(source, target);
+				if (delta != null) {
+					final String diffFile = fileName.replace(".png", ".delta.png");
+					ImageIO.write(delta, "PNG", new File(imagePath, diffFile));
+					collector.addError(new RuntimeException("Image does not match " + fileName + ". See " + diffFile));
+				} else {
+					collector.addError(new RuntimeException("Image does not match " + fileName + "."));
+				}
+			}
+
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
+		} catch (final InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
