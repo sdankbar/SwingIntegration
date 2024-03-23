@@ -22,7 +22,7 @@ import javax.swing.FocusManager;
 
 public class TestRecorder {
 
-	private class RecordedEvent {
+	private static class RecordedEvent {
 		private final AWTEvent event;
 		private final Instant eventTime;
 		private final File screenshotFile;
@@ -48,6 +48,15 @@ public class TestRecorder {
 			this.screenshotFile = screenshotFile;
 			motionEvent = false;
 		}
+	}
+
+	public static BufferedImage takeScreenshot() {
+		final Window w = FocusManager.getCurrentManager().getActiveWindow();
+		final BufferedImage i = new BufferedImage(w.getWidth(), w.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		final Graphics2D g = i.createGraphics();
+		w.paint(g);
+		g.dispose();
+		return i;
 	}
 
 	private static final int MOVE_SAMPLE_RATE = 250;
@@ -142,15 +151,6 @@ public class TestRecorder {
 		}
 	}
 
-	private BufferedImage takeScreenshot() {
-		final Window w = FocusManager.getCurrentManager().getActiveWindow();
-		final BufferedImage i = new BufferedImage(w.getWidth(), w.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		final Graphics2D g = i.createGraphics();
-		w.paint(g);
-		g.dispose();
-		return i;
-	}
-
 	private String buttonToEnum(final int mouseButton) {
 		switch (mouseButton) {
 		case MouseEvent.BUTTON1:
@@ -191,7 +191,7 @@ public class TestRecorder {
 			w.write("\n");
 			w.write("\t@Test\n");
 			w.write("\tpublic void test_run() throws AWTException {\n");
-			w.write("\t\tRobot r = new Robot();\n");
+			w.write("\t\tTestRunnder tools = new TestRunner();\n");
 
 			Instant workingTime = startTime;
 			for (final RecordedEvent e : recordedEvents) {
@@ -227,8 +227,8 @@ public class TestRecorder {
 				} else {
 					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
 					// TODO
-					w.write("\t\ttools.compareWindowToImage(new File(screenshotDir, \"" + e.screenshotFile
-							+ "\"), Duration.ofMillis(" + milli + "));\n");
+					w.write("\t\ttools.compareWindowToImage(new File(screenshotDir, path + \""
+							+ e.screenshotFile.getName() + "\"), Duration.ofMillis(" + milli + "));\n");
 					workingTime = e.eventTime;
 				}
 			}
