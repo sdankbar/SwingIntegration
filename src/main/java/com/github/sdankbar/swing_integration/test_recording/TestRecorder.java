@@ -227,9 +227,11 @@ public class TestRecorder {
 					if (e.event instanceof KeyEvent) {
 						final KeyEvent key = (KeyEvent) e.event;
 						if (key.getID() == KeyEvent.KEY_PRESSED) {
-							w.write("\t\ttools.keyPress(" + key.getKeyCode() + ");\n");
+							w.write("\t\ttools.keyPress(" + key.getKeyCode() + ");// "
+									+ KeyEvent.getKeyText(key.getKeyCode()) + "\n");
 						} else {
-							w.write("\t\ttools.keyRelease(" + key.getKeyCode() + ");\n");
+							w.write("\t\ttools.keyRelease(" + key.getKeyCode() + ");// "
+									+ KeyEvent.getKeyText(key.getKeyCode()) + "\n");
 						}
 					} else if (e.event instanceof MouseWheelEvent) {
 						final MouseEvent mouse = (MouseWheelEvent) e.event;
