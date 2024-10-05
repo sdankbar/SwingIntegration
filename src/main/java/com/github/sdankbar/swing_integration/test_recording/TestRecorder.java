@@ -38,9 +38,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 import javax.imageio.ImageIO;
 import javax.swing.FocusManager;
+import javax.swing.SwingUtilities;
 
 public class TestRecorder {
 
@@ -74,11 +77,25 @@ public class TestRecorder {
 
 	public static BufferedImage takeScreenshot() {
 		final Window w = FocusManager.getCurrentManager().getActiveWindow();
-		final BufferedImage i = new BufferedImage(w.getWidth(), w.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		final Graphics2D g = i.createGraphics();
-		w.paint(g);
-		g.dispose();
-		return i;
+		final FutureTask<BufferedImage> task = new FutureTask<>(() -> {
+			final BufferedImage i = new BufferedImage(w.getWidth(), w.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			final Graphics2D g = i.createGraphics();
+			w.paint(g);
+			g.dispose();
+			return i;
+		});
+		if (SwingUtilities.isEventDispatchThread()) {
+			task.run();
+		} else {
+			SwingUtilities.invokeLater(task);
+		}
+		try {
+			return task.get();
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private static final int MOVE_SAMPLE_RATE = 250;

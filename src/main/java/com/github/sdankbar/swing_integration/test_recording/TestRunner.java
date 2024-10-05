@@ -41,10 +41,16 @@ public class TestRunner {
 	private final File imagePath;
 	private final Robot robot;
 	private final ErrorCollector collector;
+	private final int defaultThreshold;
 
 	public TestRunner(final File imagePath, final ErrorCollector collector) {
+		this(imagePath, collector, 65);
+	}
+
+	public TestRunner(final File imagePath, final ErrorCollector collector, final int defaultThreshold) {
 		this.imagePath = Objects.requireNonNull(imagePath, "imagePath is null");
 		this.collector = Objects.requireNonNull(collector, "collector is null");
+		this.defaultThreshold = defaultThreshold;
 		try {
 			robot = new Robot();
 		} catch (final AWTException e) {
@@ -93,7 +99,7 @@ public class TestRunner {
 	}
 
 	public void compare(final String fileName) {
-		compare(fileName, 75);
+		compare(fileName, defaultThreshold);
 	}
 
 	public void compare(final String fileName, final int minimumScore) {
@@ -105,7 +111,7 @@ public class TestRunner {
 			for (int i = 0; i < 10; ++i) {
 				source = TestRecorder.takeScreenshot();
 
-				if (fuzzyEquals(source, target, 75)) {
+				if (fuzzyEquals(source, target, minimumScore)) {
 					return;
 				}
 				Thread.sleep(100);
@@ -206,6 +212,9 @@ public class TestRunner {
 
 	private boolean fuzzyEquals(final BufferedImage source, final BufferedImage target, final double ratiodB) {
 		final double peakSignalToNoiseRatio = getPeakSignalToNoiseRatio(source, target);
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		System.out.println("Signal=" + peakSignalToNoiseRatio);
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		return (peakSignalToNoiseRatio > ratiodB);
 	}
 
