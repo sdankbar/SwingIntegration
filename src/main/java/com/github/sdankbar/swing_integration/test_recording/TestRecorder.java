@@ -241,7 +241,11 @@ public class TestRecorder {
 			Instant workingTime = startTime;
 			for (final RecordedEvent e : recordedEvents) {
 				if (e.event != null) {
+					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
+
 					if (e.event instanceof KeyEvent) {
+						w.write("\t\ttools.delay(" + milli + ");\n");
+
 						final KeyEvent key = (KeyEvent) e.event;
 						if (key.getID() == KeyEvent.KEY_PRESSED) {
 							w.write("\t\ttools.keyPress(" + key.getKeyCode() + ");// "
@@ -250,28 +254,40 @@ public class TestRecorder {
 							w.write("\t\ttools.keyRelease(" + key.getKeyCode() + ");// "
 									+ KeyEvent.getKeyText(key.getKeyCode()) + "\n");
 						}
+						workingTime = e.eventTime;
 					} else if (e.event instanceof MouseWheelEvent) {
+						w.write("\t\ttools.delay(" + milli + ");\n");
+
 						final MouseEvent mouse = (MouseWheelEvent) e.event;
 						w.write("\t\ttools.mouseWheel(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
 								+ mouse.getClickCount() + ");\n");
+
+						workingTime = e.eventTime;
 					} else if (e.event instanceof MouseEvent) {
 						final MouseEvent mouse = (MouseEvent) e.event;
 						if (e.motionEvent) {
+							w.write("\t\ttools.delay(" + milli + ");\n");
+
 							w.write("\t\ttools.mouseMove(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
 									+ ");\n");
+
+							workingTime = e.eventTime;
 						} else if (mouse.getID() == MouseEvent.MOUSE_PRESSED) {
+							w.write("\t\ttools.delay(" + milli + ");\n");
+
 							w.write("\t\ttools.mousePress(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
 									+ buttonToEnum(mouse.getButton()) + ");\n");
+
+							workingTime = e.eventTime;
 						} else if (mouse.getID() == MouseEvent.MOUSE_RELEASED) {
+							w.write("\t\ttools.delay(" + milli + ");\n");
+
 							w.write("\t\ttools.mouseRelease(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
 									+ buttonToEnum(mouse.getButton()) + ");\n");
+
+							workingTime = e.eventTime;
 						}
 					}
-
-					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
-					w.write("\t\ttools.delay(" + milli + ");\n");
-
-					workingTime = e.eventTime;
 				} else {
 					final long milli = Duration.between(workingTime, e.eventTime).toMillis();
 					w.write("\t\ttools.delay(" + milli + ");\n");
