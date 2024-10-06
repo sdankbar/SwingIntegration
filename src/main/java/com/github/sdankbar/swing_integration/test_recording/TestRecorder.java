@@ -107,6 +107,9 @@ public class TestRecorder {
 	private File recordingDir = new File(".");
 	private Instant lastMouseMoveTime = Instant.EPOCH;
 
+	private int toggleRecordingHotKey = KeyEvent.VK_F1;
+	private int screenshotHotKey = KeyEvent.VK_F2;
+
 	public TestRecorder() {
 		Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
 			handleKeyEvent(event);
@@ -119,6 +122,19 @@ public class TestRecorder {
 		Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
 			handleMouseEvent(event);
 		}, AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_WHEEL_EVENT_MASK);
+	}
+
+	/**
+	 * Change the keyboard keys used to start/stop recording and take screenshots.
+	 *
+	 * @param toggleRecording Key code for toggling recording. Use a KeyEvent
+	 *                        constant, like KeyEvent.VK_F1.
+	 * @param screenshot      Key code for toggling recording. Use a KeyEvent
+	 *                        constant, like KeyEvent.VK_F2.
+	 */
+	public void setHotkeys(final int toggleRecording, final int screenshot) {
+		toggleRecordingHotKey = toggleRecording;
+		screenshotHotKey = screenshot;
 	}
 
 	private void handleMouseMotionEvent(final AWTEvent event) {
@@ -142,9 +158,9 @@ public class TestRecorder {
 		final KeyEvent key = (KeyEvent) event;
 
 		if (key.getID() == KeyEvent.KEY_PRESSED) {
-			if (key.getKeyCode() == KeyEvent.VK_F1) {
+			if (key.getKeyCode() == toggleRecordingHotKey) {
 				// Ignore
-			} else if (key.getKeyCode() == KeyEvent.VK_F2) {
+			} else if (key.getKeyCode() == screenshotHotKey) {
 				// Ignore
 			} else if (isRecording) {
 				final RecordedEvent rec = new RecordedEvent(event, Instant.now());
@@ -152,7 +168,7 @@ public class TestRecorder {
 			}
 			lastMouseMoveTime = Instant.EPOCH;
 		} else if (key.getID() == KeyEvent.KEY_RELEASED) {
-			if (key.getKeyCode() == KeyEvent.VK_F1) {
+			if (key.getKeyCode() == toggleRecordingHotKey) {
 				if (isRecording) {
 					saveTestSteps();
 				} else {
@@ -166,7 +182,7 @@ public class TestRecorder {
 				isRecording = !isRecording;
 
 				lastMouseMoveTime = Instant.EPOCH;
-			} else if (key.getKeyCode() == KeyEvent.VK_F2 && isRecording) {
+			} else if (key.getKeyCode() == screenshotHotKey && isRecording) {
 
 				final BufferedImage windowImage = takeScreenshot();
 				if (windowImage != null) {
