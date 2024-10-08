@@ -307,4 +307,17 @@ public class TestRunner {
 		}
 	}
 
+	public void raiseWindow(final String name) {
+		Objects.requireNonNull(name, "name is null");
+		for (final Window window : Window.getWindows()) {
+			if (name.equals(window.getName())) {
+				window.toFront();
+				window.requestFocus();
+				return;
+			}
+		}
+
+		throw new IllegalArgumentException(name + " not found");
+	}
+
 }
