@@ -124,6 +124,17 @@ public class TestRecorder {
 		}, AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_WHEEL_EVENT_MASK);
 	}
 
+	private void addEvent(final RecordedEvent e) {
+		if (!recordedEvents.isEmpty()) {
+			final RecordedEvent last = recordedEvents.get(recordedEvents.size() - 1);
+			if (last.event != e.event || e.event == null) {
+				recordedEvents.add(e);
+			}
+		} else {
+			recordedEvents.add(e);
+		}
+	}
+
 	/**
 	 * Change the keyboard keys used to start/stop recording and take screenshots.
 	 *
@@ -143,14 +154,14 @@ public class TestRecorder {
 		if ((milli - lastMouseMoveTime.toEpochMilli()) > MOVE_SAMPLE_RATE && isRecording) {
 			final RecordedEvent rec = new RecordedEvent(event, now, true);
 			lastMouseMoveTime = now;
-			recordedEvents.add(rec);
+			addEvent(rec);
 		}
 	}
 
 	private void handleMouseEvent(final AWTEvent event) {
 		if (isRecording) {
 			final RecordedEvent rec = new RecordedEvent(event, Instant.now());
-			recordedEvents.add(rec);
+			addEvent(rec);
 		}
 	}
 
@@ -164,7 +175,7 @@ public class TestRecorder {
 				// Ignore
 			} else if (isRecording) {
 				final RecordedEvent rec = new RecordedEvent(event, Instant.now());
-				recordedEvents.add(rec);
+				addEvent(rec);
 			}
 			lastMouseMoveTime = Instant.EPOCH;
 		} else if (key.getID() == KeyEvent.KEY_RELEASED) {
@@ -192,7 +203,7 @@ public class TestRecorder {
 					try {
 						ImageIO.write(windowImage, "PNG", filePath);
 						final RecordedEvent rec = new RecordedEvent(Instant.now(), filePath);
-						recordedEvents.add(rec);
+						addEvent(rec);
 					} catch (final IOException e) {
 						e.printStackTrace();// TODO
 					}
@@ -200,7 +211,7 @@ public class TestRecorder {
 				lastMouseMoveTime = Instant.EPOCH;
 			} else if (isRecording) {
 				final RecordedEvent rec = new RecordedEvent(event, Instant.now());
-				recordedEvents.add(rec);
+				addEvent(rec);
 			}
 			lastMouseMoveTime = Instant.EPOCH;
 		}
@@ -274,9 +285,8 @@ public class TestRecorder {
 					} else if (e.event instanceof MouseWheelEvent) {
 						w.write("\t\ttools.delay(" + milli + ");\n");
 
-						final MouseEvent mouse = (MouseWheelEvent) e.event;
-						w.write("\t\ttools.mouseWheel(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
-								+ mouse.getClickCount() + ");\n");
+						final MouseWheelEvent mouse = (MouseWheelEvent) e.event;
+						w.write("\t\ttools.mouseWheel(" + mouse.getWheelRotation() + ");\n");
 
 						workingTime = e.eventTime;
 					} else if (e.event instanceof MouseEvent) {

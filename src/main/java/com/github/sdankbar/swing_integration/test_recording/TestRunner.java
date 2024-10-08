@@ -29,10 +29,12 @@ import java.awt.Window;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
 import javax.swing.FocusManager;
+import javax.swing.SwingUtilities;
 
 import org.junit.rules.ErrorCollector;
 
@@ -86,7 +88,7 @@ public class TestRunner {
 					final int deltaR = Math.abs(red(sColor) - red(tColor));
 					final int deltaG = Math.abs(green(sColor) - green(tColor));
 					final int deltaB = Math.abs(blue(sColor) - blue(tColor));
-					if (whiteEquals && deltaR == 0 && deltaG == 0 && deltaB == 0) {
+					if (whiteEquals && (deltaR == 0) && (deltaG == 0) && (deltaB == 0)) {
 						output.setRGB(x, y, new Color(255, 255, 255).getRGB());
 					} else {
 						output.setRGB(x, y, new Color(deltaR, deltaG, deltaB).getRGB());
@@ -179,7 +181,7 @@ public class TestRunner {
 	}
 
 	private double getPeakSignalToNoiseRatio(final BufferedImage source, final BufferedImage target) {
-		if (source == null || target == null) {
+		if ((source == null) || (target == null)) {
 			return 0;
 		} else if (source.getWidth() != target.getWidth()) {
 			return 0;
@@ -218,31 +220,46 @@ public class TestRunner {
 		return (peakSignalToNoiseRatio > ratiodB);
 	}
 
+	public void waitForEvent() {
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				// Empty Implementation
+			});
+		} catch (InvocationTargetException | InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void keyPress(final int keyCode) {
 		robot.keyPress(keyCode);
+		waitForEvent();
 	}
 
 	public void keyRelease(final int keyCode) {
 		robot.keyRelease(keyCode);
+		waitForEvent();
 	}
 
-	public void mouseWheel(final int x, final int y, final int wheelClickCount) {
-		robot.mouseMove(x, y);
+	public void mouseWheel(final int wheelClickCount) {
 		robot.mouseWheel(wheelClickCount);
+		waitForEvent();
 	}
 
 	public void mouseMove(final int x, final int y) {
 		robot.mouseMove(x, y);
+		waitForEvent();
 	}
 
 	public void mousePress(final int x, final int y, final int buttons) {
 		robot.mouseMove(x, y);
 		robot.mousePress(buttons);
+		waitForEvent();
 	}
 
 	public void mouseRelease(final int x, final int y, final int buttons) {
 		robot.mouseMove(x, y);
 		robot.mouseRelease(buttons);
+		waitForEvent();
 	}
 
 	public void delay(final int milli) {
