@@ -146,16 +146,18 @@ public class TestRecorder {
 	private File recordingDir = new File(".");
 	private Instant lastMouseMoveTime = Instant.EPOCH;
 	private final RecordingMode mode;
+	private final boolean autoRaise;
 
 	private int toggleRecordingHotKey = KeyEvent.VK_F1;
 	private int screenshotHotKey = KeyEvent.VK_F2;
 
 	public TestRecorder() {
-		this(RecordingMode.RELATIVE);
+		this(RecordingMode.RELATIVE, false);
 	}
 
-	public TestRecorder(final RecordingMode mode) {
+	public TestRecorder(final RecordingMode mode, final boolean autoRaise) {
 		this.mode = Objects.requireNonNull(mode, "mode is null");
+		this.autoRaise = autoRaise;
 		Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
 			handleKeyEvent(event);
 		}, AWTEvent.KEY_EVENT_MASK);
@@ -283,6 +285,14 @@ public class TestRecorder {
 		}
 	}
 
+	private String getAutoRaiseString(final RecordedEvent e) {
+		if (autoRaise && mode == RecordingMode.RELATIVE && e.window != null) {
+			return "\"" + e.window.title + "\", ";
+		} else {
+			return "";
+		}
+	}
+
 	private void saveTestSteps() {
 		final File output = new File(recordingDir, "TemplateTest.java");
 		try (BufferedWriter w = new BufferedWriter(new FileWriter(output))) {
@@ -328,10 +338,10 @@ public class TestRecorder {
 
 						final KeyEvent key = (KeyEvent) e.event;
 						if (key.getID() == KeyEvent.KEY_PRESSED) {
-							w.write("\t\ttools.keyPress(" + key.getKeyCode() + ");// "
+							w.write("\t\ttools.keyPress(" + getAutoRaiseString(e) + key.getKeyCode() + ");// "
 									+ KeyEvent.getKeyText(key.getKeyCode()) + "\n");
 						} else {
-							w.write("\t\ttools.keyRelease(" + key.getKeyCode() + ");// "
+							w.write("\t\ttools.keyRelease(" + getAutoRaiseString(e) + key.getKeyCode() + ");// "
 									+ KeyEvent.getKeyText(key.getKeyCode()) + "\n");
 						}
 						workingTime = e.eventTime;
@@ -339,7 +349,7 @@ public class TestRecorder {
 						w.write("\t\ttools.delay(" + milli + ");\n");
 
 						final MouseWheelEvent mouse = (MouseWheelEvent) e.event;
-						w.write("\t\ttools.mouseWheel(" + mouse.getWheelRotation() + ");\n");
+						w.write("\t\ttools.mouseWheel(" + getAutoRaiseString(e) + mouse.getWheelRotation() + ");\n");
 
 						workingTime = e.eventTime;
 					} else if (e.event instanceof MouseEvent) {
@@ -351,7 +361,8 @@ public class TestRecorder {
 								w.write("\t\ttools.mouseMove(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
 										+ ");\n");
 							} else {
-								w.write("\t\ttools.mouseMoveRelative(" + e.getRelativeX(mouse.getXOnScreen()) + ", "
+								w.write("\t\ttools.mouseMoveRelative(" + getAutoRaiseString(e)
+										+ e.getRelativeX(mouse.getXOnScreen()) + ", "
 										+ e.getRelativeY(mouse.getYOnScreen()) + ");\n");
 							}
 
@@ -363,7 +374,8 @@ public class TestRecorder {
 								w.write("\t\ttools.mousePress(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
 										+ "," + buttonToEnum(mouse.getButton()) + ");\n");
 							} else {
-								w.write("\t\ttools.mousePressRelative(" + e.getRelativeX(mouse.getXOnScreen()) + ", "
+								w.write("\t\ttools.mousePressRelative(" + getAutoRaiseString(e)
+										+ e.getRelativeX(mouse.getXOnScreen()) + ", "
 										+ e.getRelativeY(mouse.getYOnScreen()) + "," + buttonToEnum(mouse.getButton())
 										+ ");\n");
 							}
@@ -376,7 +388,8 @@ public class TestRecorder {
 								w.write("\t\ttools.mouseRelease(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
 										+ "," + buttonToEnum(mouse.getButton()) + ");\n");
 							} else {
-								w.write("\t\ttools.mouseReleaseRelative(" + e.getRelativeX(mouse.getXOnScreen()) + ", "
+								w.write("\t\ttools.mouseReleaseRelative(" + getAutoRaiseString(e)
+										+ e.getRelativeX(mouse.getXOnScreen()) + ", "
 										+ e.getRelativeY(mouse.getYOnScreen()) + "," + buttonToEnum(mouse.getButton())
 										+ ");\n");
 							}

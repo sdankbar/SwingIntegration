@@ -235,14 +235,32 @@ public class TestRunner {
 		waitForEvent();
 	}
 
+	public void keyPress(final String windowName, final int keyCode) {
+		raiseWindow(windowName);
+
+		keyPress(keyCode);
+	}
+
 	public void keyRelease(final int keyCode) {
 		robot.keyRelease(keyCode);
 		waitForEvent();
 	}
 
+	public void keyRelease(final String windowName, final int keyCode) {
+		raiseWindow(windowName);
+
+		keyRelease(keyCode);
+	}
+
 	public void mouseWheel(final int wheelClickCount) {
 		robot.mouseWheel(wheelClickCount);
 		waitForEvent();
+	}
+
+	public void mouseWheel(final String windowName, final int wheelClickCount) {
+		raiseWindow(windowName);
+
+		mouseWheel(wheelClickCount);
 	}
 
 	private Window getCurrentFocusedWindow() {
@@ -266,6 +284,12 @@ public class TestRunner {
 		waitForEvent();
 	}
 
+	public void mouseMoveRelative(final String windowName, final int x, final int y) {
+		raiseWindow(windowName);
+
+		mouseMoveRelative(x, y);
+	}
+
 	public void mousePress(final int x, final int y, final int buttons) {
 		robot.mouseMove(x, y);
 		robot.mousePress(buttons);
@@ -280,6 +304,12 @@ public class TestRunner {
 		robot.mouseMove(absX, absY);
 		robot.mousePress(buttons);
 		waitForEvent();
+	}
+
+	public void mousePressRelative(final String windowName, final int x, final int y, final int buttons) {
+		raiseWindow(windowName);
+
+		mousePressRelative(x, y, buttons);
 	}
 
 	public void mouseRelease(final int x, final int y, final int buttons) {
@@ -298,6 +328,12 @@ public class TestRunner {
 		waitForEvent();
 	}
 
+	public void mouseReleaseRelative(final String windowName, final int x, final int y, final int buttons) {
+		raiseWindow(windowName);
+
+		mouseReleaseRelative(x, y, buttons);
+	}
+
 	public void delay(final int milli) {
 		try {
 			Thread.sleep(milli);
@@ -311,8 +347,10 @@ public class TestRunner {
 		Objects.requireNonNull(name, "name is null");
 		for (final Window window : Window.getWindows()) {
 			if (name.equals(window.getName())) {
-				window.toFront();
-				window.requestFocus();
+				if (!window.isActive()) {
+					window.toFront();
+					window.requestFocus();
+				}
 				return;
 			}
 		}
