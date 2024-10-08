@@ -245,8 +245,24 @@ public class TestRunner {
 		waitForEvent();
 	}
 
+	private Window getCurrentFocusedWindow() {
+		final Window w = FocusManager.getCurrentManager().getActiveWindow();
+		if (w == null) {
+			throw new IllegalStateException("No window with focus");
+		}
+		return w;
+	}
+
 	public void mouseMove(final int x, final int y) {
 		robot.mouseMove(x, y);
+		waitForEvent();
+	}
+
+	public void mouseMoveRelative(final int x, final int y) {
+		final Window w = getCurrentFocusedWindow();
+		final int absX = w.getX() + x;
+		final int absY = w.getY() + y;
+		robot.mouseMove(absX, absY);
 		waitForEvent();
 	}
 
@@ -256,8 +272,28 @@ public class TestRunner {
 		waitForEvent();
 	}
 
+	public void mousePressRelative(final int x, final int y, final int buttons) {
+		final Window w = getCurrentFocusedWindow();
+		final int absX = w.getX() + x;
+		final int absY = w.getY() + y;
+
+		robot.mouseMove(absX, absY);
+		robot.mousePress(buttons);
+		waitForEvent();
+	}
+
 	public void mouseRelease(final int x, final int y, final int buttons) {
 		robot.mouseMove(x, y);
+		robot.mouseRelease(buttons);
+		waitForEvent();
+	}
+
+	public void mouseReleaseRelative(final int x, final int y, final int buttons) {
+		final Window w = getCurrentFocusedWindow();
+		final int absX = w.getX() + x;
+		final int absY = w.getY() + y;
+
+		robot.mouseMove(absX, absY);
 		robot.mouseRelease(buttons);
 		waitForEvent();
 	}

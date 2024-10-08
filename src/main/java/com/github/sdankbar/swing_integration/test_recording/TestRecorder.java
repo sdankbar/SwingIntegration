@@ -24,6 +24,7 @@ package com.github.sdankbar.swing_integration.test_recording;
 
 import java.awt.AWTEvent;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.KeyEvent;
@@ -38,6 +39,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
@@ -47,24 +49,40 @@ import javax.swing.SwingUtilities;
 
 public class TestRecorder {
 
+	private static class ActiveWindow {
+		private final String title;
+		private final Point location;
+
+		public ActiveWindow(final String title, final Point location) {
+			this.title = title;
+			this.location = location;
+		}
+
+	}
+
 	private static class RecordedEvent {
 		private final AWTEvent event;
 		private final Instant eventTime;
 		private final File screenshotFile;
 		private final boolean motionEvent;
 
-		public RecordedEvent(final AWTEvent event, final Instant eventTime) {
+		private final ActiveWindow window;
+
+		public RecordedEvent(final AWTEvent event, final Instant eventTime, final ActiveWindow w) {
 			this.event = event;
 			this.eventTime = eventTime;
 			screenshotFile = null;
 			motionEvent = false;
+			window = w;
 		}
 
-		public RecordedEvent(final AWTEvent event, final Instant eventTime, final boolean isMotion) {
+		public RecordedEvent(final AWTEvent event, final Instant eventTime, final boolean isMotion,
+				final ActiveWindow w) {
 			this.event = event;
 			this.eventTime = eventTime;
 			screenshotFile = null;
 			motionEvent = isMotion;
+			window = w;
 		}
 
 		public RecordedEvent(final Instant eventTime, final File screenshotFile) {
@@ -72,6 +90,23 @@ public class TestRecorder {
 			this.eventTime = eventTime;
 			this.screenshotFile = screenshotFile;
 			motionEvent = false;
+			window = null;
+		}
+
+		public int getRelativeX(final int x) {
+			if (window != null) {
+				return x - window.location.x;
+			} else {
+				return x;
+			}
+		}
+
+		public int getRelativeY(final int y) {
+			if (window != null) {
+				return y - window.location.y;
+			} else {
+				return y;
+			}
 		}
 	}
 
@@ -98,6 +133,10 @@ public class TestRecorder {
 		}
 	}
 
+	public enum RecordingMode {
+		ABSOLUTE, RELATIVE
+	}
+
 	private static final int MOVE_SAMPLE_RATE = 250;
 
 	private final List<RecordedEvent> recordedEvents = new ArrayList<>();
@@ -106,11 +145,17 @@ public class TestRecorder {
 	private Instant startTime = Instant.EPOCH;
 	private File recordingDir = new File(".");
 	private Instant lastMouseMoveTime = Instant.EPOCH;
+	private final RecordingMode mode;
 
 	private int toggleRecordingHotKey = KeyEvent.VK_F1;
 	private int screenshotHotKey = KeyEvent.VK_F2;
 
 	public TestRecorder() {
+		this(RecordingMode.RELATIVE);
+	}
+
+	public TestRecorder(final RecordingMode mode) {
+		this.mode = Objects.requireNonNull(mode, "mode is null");
 		Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
 			handleKeyEvent(event);
 		}, AWTEvent.KEY_EVENT_MASK);
@@ -148,11 +193,19 @@ public class TestRecorder {
 		screenshotHotKey = screenshot;
 	}
 
+	private ActiveWindow getActiveWindow() {
+		final Window w = FocusManager.getCurrentManager().getActiveWindow();
+		if (w == null) {
+			return null;
+		}
+		return new ActiveWindow(w.getName(), w.getLocationOnScreen());
+	}
+
 	private void handleMouseMotionEvent(final AWTEvent event) {
 		final Instant now = Instant.now();
 		final long milli = now.toEpochMilli();
 		if ((milli - lastMouseMoveTime.toEpochMilli()) > MOVE_SAMPLE_RATE && isRecording) {
-			final RecordedEvent rec = new RecordedEvent(event, now, true);
+			final RecordedEvent rec = new RecordedEvent(event, now, true, getActiveWindow());
 			lastMouseMoveTime = now;
 			addEvent(rec);
 		}
@@ -160,7 +213,7 @@ public class TestRecorder {
 
 	private void handleMouseEvent(final AWTEvent event) {
 		if (isRecording) {
-			final RecordedEvent rec = new RecordedEvent(event, Instant.now());
+			final RecordedEvent rec = new RecordedEvent(event, Instant.now(), getActiveWindow());
 			addEvent(rec);
 		}
 	}
@@ -174,7 +227,7 @@ public class TestRecorder {
 			} else if (key.getKeyCode() == screenshotHotKey) {
 				// Ignore
 			} else if (isRecording) {
-				final RecordedEvent rec = new RecordedEvent(event, Instant.now());
+				final RecordedEvent rec = new RecordedEvent(event, Instant.now(), getActiveWindow());
 				addEvent(rec);
 			}
 			lastMouseMoveTime = Instant.EPOCH;
@@ -210,7 +263,7 @@ public class TestRecorder {
 				}
 				lastMouseMoveTime = Instant.EPOCH;
 			} else if (isRecording) {
-				final RecordedEvent rec = new RecordedEvent(event, Instant.now());
+				final RecordedEvent rec = new RecordedEvent(event, Instant.now(), getActiveWindow());
 				addEvent(rec);
 			}
 			lastMouseMoveTime = Instant.EPOCH;
@@ -294,22 +347,39 @@ public class TestRecorder {
 						if (e.motionEvent) {
 							w.write("\t\ttools.delay(" + milli + ");\n");
 
-							w.write("\t\ttools.mouseMove(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
-									+ ");\n");
+							if (mode == RecordingMode.ABSOLUTE) {
+								w.write("\t\ttools.mouseMove(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
+										+ ");\n");
+							} else {
+								w.write("\t\ttools.mouseMoveRelative(" + e.getRelativeX(mouse.getXOnScreen()) + ", "
+										+ e.getRelativeY(mouse.getYOnScreen()) + ");\n");
+							}
 
 							workingTime = e.eventTime;
 						} else if (mouse.getID() == MouseEvent.MOUSE_PRESSED) {
 							w.write("\t\ttools.delay(" + milli + ");\n");
 
-							w.write("\t\ttools.mousePress(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
-									+ buttonToEnum(mouse.getButton()) + ");\n");
+							if (mode == RecordingMode.ABSOLUTE) {
+								w.write("\t\ttools.mousePress(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
+										+ "," + buttonToEnum(mouse.getButton()) + ");\n");
+							} else {
+								w.write("\t\ttools.mousePressRelative(" + e.getRelativeX(mouse.getXOnScreen()) + ", "
+										+ e.getRelativeY(mouse.getYOnScreen()) + "," + buttonToEnum(mouse.getButton())
+										+ ");\n");
+							}
 
 							workingTime = e.eventTime;
 						} else if (mouse.getID() == MouseEvent.MOUSE_RELEASED) {
 							w.write("\t\ttools.delay(" + milli + ");\n");
 
-							w.write("\t\ttools.mouseRelease(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen() + ","
-									+ buttonToEnum(mouse.getButton()) + ");\n");
+							if (mode == RecordingMode.ABSOLUTE) {
+								w.write("\t\ttools.mouseRelease(" + mouse.getXOnScreen() + ", " + mouse.getYOnScreen()
+										+ "," + buttonToEnum(mouse.getButton()) + ");\n");
+							} else {
+								w.write("\t\ttools.mouseReleaseRelative(" + e.getRelativeX(mouse.getXOnScreen()) + ", "
+										+ e.getRelativeY(mouse.getYOnScreen()) + "," + buttonToEnum(mouse.getButton())
+										+ ");\n");
+							}
 
 							workingTime = e.eventTime;
 						}
