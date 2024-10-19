@@ -137,7 +137,11 @@ public class TestRecorder {
 		ABSOLUTE, RELATIVE
 	}
 
-	private static final int MOVE_SAMPLE_RATE = 250;
+	public static void setMouseMoveRate(int milliseconds) {
+		MOVE_SAMPLE_RATE = milliseconds;
+	}
+	
+	private static int MOVE_SAMPLE_RATE = 150;
 
 	private final List<RecordedEvent> recordedEvents = new ArrayList<>();
 
@@ -174,7 +178,7 @@ public class TestRecorder {
 	private void addEvent(final RecordedEvent e) {
 		if (!recordedEvents.isEmpty()) {
 			final RecordedEvent last = recordedEvents.get(recordedEvents.size() - 1);
-			if (last.event != e.event || e.event == null) {
+			if ((last.event != e.event) || (e.event == null)) {
 				recordedEvents.add(e);
 			}
 		} else {
@@ -206,7 +210,7 @@ public class TestRecorder {
 	private void handleMouseMotionEvent(final AWTEvent event) {
 		final Instant now = Instant.now();
 		final long milli = now.toEpochMilli();
-		if ((milli - lastMouseMoveTime.toEpochMilli()) > MOVE_SAMPLE_RATE && isRecording) {
+		if (((milli - lastMouseMoveTime.toEpochMilli()) > MOVE_SAMPLE_RATE) && isRecording) {
 			final RecordedEvent rec = new RecordedEvent(event, now, true, getActiveWindow());
 			lastMouseMoveTime = now;
 			addEvent(rec);
@@ -248,7 +252,7 @@ public class TestRecorder {
 				isRecording = !isRecording;
 
 				lastMouseMoveTime = Instant.EPOCH;
-			} else if (key.getKeyCode() == screenshotHotKey && isRecording) {
+			} else if ((key.getKeyCode() == screenshotHotKey) && isRecording) {
 
 				final BufferedImage windowImage = takeScreenshot();
 				if (windowImage != null) {
@@ -274,19 +278,19 @@ public class TestRecorder {
 
 	private String buttonToEnum(final int mouseButton) {
 		switch (mouseButton) {
-		case MouseEvent.BUTTON1:
-			return "InputEvent.BUTTON1_DOWN_MASK";
-		case MouseEvent.BUTTON2:
-			return "InputEvent.BUTTON2_DOWN_MASK";
-		case MouseEvent.BUTTON3:
-			return "InputEvent.BUTTON3_DOWN_MASK";
-		default:
-			return "InputEvent.BUTTON1_DOWN_MASK";
+			case MouseEvent.BUTTON1:
+				return "InputEvent.BUTTON1_DOWN_MASK";
+			case MouseEvent.BUTTON2:
+				return "InputEvent.BUTTON2_DOWN_MASK";
+			case MouseEvent.BUTTON3:
+				return "InputEvent.BUTTON3_DOWN_MASK";
+			default:
+				return "InputEvent.BUTTON1_DOWN_MASK";
 		}
 	}
 
 	private String getAutoRaiseString(final RecordedEvent e) {
-		if (autoRaise && mode == RecordingMode.RELATIVE && e.window != null) {
+		if (autoRaise && (mode == RecordingMode.RELATIVE) && (e.window != null)) {
 			return "\"" + e.window.title + "\", ";
 		} else {
 			return "";
@@ -306,7 +310,7 @@ public class TestRecorder {
 			w.write("import org.junit.rules.ErrorCollector;\n");
 			w.write("import org.junit.Rule;\n");
 			w.write("\n");
-			w.write("public class IntegrationTest {\n");
+			w.write("public class TemplateTest {\n");
 			w.write("\n");
 			w.write("\tprivate final String screenshotDir = \"TODO\";\n");
 			w.write("\n");

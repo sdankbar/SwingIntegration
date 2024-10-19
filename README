@@ -1,0 +1,4 @@
+Environment Variables
+"RECAPTURE=1": When a test is run, if an image comparison fails, stored the actual screenshot to disk, overwriting the existing file.  Can be used to automatically update
+screenshots when changes are made to the application under test.  Should check the delta file to confirm that the changes are the expected ones.
+"WHITE_EQUALS=1": When generating delta, if pixels are equal, output white instead of black.  Helpful for seeing small difference in pixel values.

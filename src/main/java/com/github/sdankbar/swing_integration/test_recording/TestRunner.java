@@ -30,6 +30,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
@@ -39,6 +40,20 @@ import javax.swing.SwingUtilities;
 import org.junit.rules.ErrorCollector;
 
 public class TestRunner {
+
+	private static Duration WINDOW_GET_TIMEOUT = Duration.ofMillis(2000);
+
+	public static void setGetWindowTimeout(Duration timeout) {
+		WINDOW_GET_TIMEOUT = Objects.requireNonNull(timeout, "timeout is null");
+	}
+	
+	private static BufferedImage readImage(File imageFile) {
+		try {
+			return ImageIO.read(imageFile);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed reading image file:" + imageFile.getAbsolutePath(), e);
+		}
+	}
 
 	private final File imagePath;
 	private final Robot robot;
@@ -107,7 +122,7 @@ public class TestRunner {
 	public void compare(final String fileName, final int minimumScore) {
 		try {
 			final File fullPath = new File(imagePath, fileName);
-			final BufferedImage target = ImageIO.read(fullPath);
+			final BufferedImage target = readImage(fullPath);
 
 			BufferedImage source = null;
 			for (int i = 0; i < 10; ++i) {
@@ -264,11 +279,20 @@ public class TestRunner {
 	}
 
 	private Window getCurrentFocusedWindow() {
-		final Window w = FocusManager.getCurrentManager().getActiveWindow();
-		if (w == null) {
-			throw new IllegalStateException("No window with focus");
+		long end = System.currentTimeMillis() + WINDOW_GET_TIMEOUT.toMillis();
+		while (System.currentTimeMillis() < end) {
+			final Window w = FocusManager.getCurrentManager().getActiveWindow();
+			if ((w != null) && w.isShowing()) {
+				return w;
+			} else {
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		return w;
+		throw new IllegalStateException("Window not visible");
 	}
 
 	public void mouseMove(final int x, final int y) {
@@ -278,8 +302,8 @@ public class TestRunner {
 
 	public void mouseMoveRelative(final int x, final int y) {
 		final Window w = getCurrentFocusedWindow();
-		final int absX = w.getX() + x;
-		final int absY = w.getY() + y;
+		final int absX = (int) (w.getLocationOnScreen().getX() + x);
+		final int absY = (int) (w.getLocationOnScreen().getY() + y);
 		robot.mouseMove(absX, absY);
 		waitForEvent();
 	}
@@ -291,17 +315,13 @@ public class TestRunner {
 	}
 
 	public void mousePress(final int x, final int y, final int buttons) {
-		robot.mouseMove(x, y);
+		mouseMove(x, y);
 		robot.mousePress(buttons);
 		waitForEvent();
 	}
 
 	public void mousePressRelative(final int x, final int y, final int buttons) {
-		final Window w = getCurrentFocusedWindow();
-		final int absX = w.getX() + x;
-		final int absY = w.getY() + y;
-
-		robot.mouseMove(absX, absY);
+		mouseMoveRelative(x, y);
 		robot.mousePress(buttons);
 		waitForEvent();
 	}
@@ -313,17 +333,13 @@ public class TestRunner {
 	}
 
 	public void mouseRelease(final int x, final int y, final int buttons) {
-		robot.mouseMove(x, y);
+		mouseMove(x, y);
 		robot.mouseRelease(buttons);
 		waitForEvent();
 	}
 
 	public void mouseReleaseRelative(final int x, final int y, final int buttons) {
-		final Window w = getCurrentFocusedWindow();
-		final int absX = w.getX() + x;
-		final int absY = w.getY() + y;
-
-		robot.mouseMove(absX, absY);
+		mouseMoveRelative(x, y);
 		robot.mouseRelease(buttons);
 		waitForEvent();
 	}
